@@ -32,9 +32,6 @@ If you enjoy using NotchPrompter and find it useful, you can support the project
 Thank you for your support! 💖
 
 ## Roadmap
-- [ ] Add text persistence (save/load notes).
-- [ ] Customize window transparency/appearance.
-- [ ] Support for multiple prompts.
 - [ ] Activate play/pause on detected audio
 
 ## License
