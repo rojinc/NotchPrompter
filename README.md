@@ -2,7 +2,7 @@
 
 <img width="128" height="128" alt="notch-promptern-macOS-Default-128x128@2x" src="https://github.com/user-attachments/assets/0eff155d-c2f6-497b-80ce-6eab223935e4" />
 
-# Notch Prompter for macOS
+# NotchPrompter for macOS
 
 A **very basic**, always-on-top floating text prompter for macOS.
 Perfect for quick videos, or keeping important text visible while you work.
