@@ -1,3 +1,6 @@
+
+<img width="128" height="128" alt="Icon-macOS-Default-128x128@1x" src="https://github.com/user-attachments/assets/d728b358-0b0c-4618-820c-c6265ef7d820" />
+
 # Notch Prompter for macOS
 
 A **very basic**, always-on-top floating text prompter for macOS.
