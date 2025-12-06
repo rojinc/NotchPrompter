@@ -15,15 +15,15 @@ struct SettingsView: View {
 
             HStack {
                 Text("Speed")
-                Slider(value: $viewModel.speed, in: 10...200, step: 1)
+                Slider(value: $viewModel.speed, in: 1...40, step: 1)
                 Text("\(Int(viewModel.speed)) pt/s")
                     .monospacedDigit()
                     .frame(width: 80, alignment: .trailing)
             }
 
             HStack {
-                Text("Font size")
-                Slider(value: $viewModel.fontSize, in: 14...80, step: 1)
+                Text("Text size")
+                Slider(value: $viewModel.fontSize, in: 8...30, step: 1)
                 Text("\(Int(viewModel.fontSize)) pt")
                     .monospacedDigit()
                     .frame(width: 80, alignment: .trailing)

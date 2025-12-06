@@ -19,8 +19,8 @@ final class PrompterViewModel: ObservableObject {
 
     Aute duis voluptate, eiusmod elit amet excepteur. Eiusmod elit amet excepteur, non. Excepteur non ex veniam aliquip enim irure. Ex veniam, aliquip enim irure nulla aliquip. Enim irure nulla aliquip est et irure, elit. Aliquip est et, irure. Irure elit lorem proident, excepteur. Proident excepteur et ad nulla nulla cillum et.
     """
-    @Published var speed: Double = 40.0 // points per second
-    @Published var fontSize: Double = 28.0
+    @Published var speed: Double = 12.0 // points per second
+    @Published var fontSize: Double = 14.0
 
     @Published var pauseOnHover: Bool = false
     @Published var playOnAudio: Bool = false {

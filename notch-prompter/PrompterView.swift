@@ -14,7 +14,6 @@ struct PrompterView: View {
         ZStack {
             Color.black
             GeometryReader { geo in
-                // container is fixed, only text moves
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
                     movingText
@@ -69,7 +68,7 @@ struct PrompterView: View {
 
     private var movingText: some View {
         // Duplicate the text once to create a seamless loop
-        let linesSpacing = 8.0
+        let linesSpacing = 8.0 //add settings to configure this
         return VStack(spacing: linesSpacing) {
             textBlock
             textBlock
@@ -79,11 +78,14 @@ struct PrompterView: View {
     }
 
     private var textBlock: some View {
-        Text(viewModel.text.isEmpty ? "Put some text in Settings..." : viewModel.text)
+        let base = viewModel.text.isEmpty ? "Put some text in Settings..." : viewModel.text
+        let text = "\n" + base // add a new line to not hide the first line under the notch
+        
+        return Text(text)
             .font(.system(size: viewModel.fontSize, weight: .regular, design: .default))
             .foregroundColor(.white)
             .multilineTextAlignment(.center)
-            .lineSpacing(6)
+            .lineSpacing(8)
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .center)

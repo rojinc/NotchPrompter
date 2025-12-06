@@ -17,8 +17,7 @@ struct NotchPrompterApp: App {
             } label: {
                 Label(appDelegate.viewModel.isPlaying ? "Pause" : "Play",
                       systemImage: appDelegate.viewModel.isPlaying ? "pause.fill" : "play.fill")
-            }
-            .keyboardShortcut("p", modifiers: [])
+            };
 
             Divider()
 

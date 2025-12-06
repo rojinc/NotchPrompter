@@ -9,15 +9,21 @@ final class PrompterWindow {
         self.viewModel = viewModel
 
         let contentView = PrompterView(viewModel: viewModel)
-            .frame(width: 800, height: 150)
+            .frame(width: 400, height: 150)
+            .clipShape( UnevenRoundedRectangle(
+                topLeadingRadius: 0,
+                bottomLeadingRadius: 16,
+                bottomTrailingRadius: 16,
+                topTrailingRadius: 0
+            ))
+
 
         let hosting = NSHostingView(rootView: contentView)
         hosting.wantsLayer = true
-        hosting.layer?.cornerRadius = 16
         hosting.layer?.masksToBounds = true
 
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 150),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 150),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -41,15 +47,18 @@ final class PrompterWindow {
             return
         }
 
-        // Position top-center of the main screen
-        let screenFrame = screen.visibleFrame
+        let screenFrame = screen.frame
         let windowSize = window.frame.size
+
         let x = screenFrame.midX - windowSize.width / 2
-        // place near the top, with a small margin
-        let y = screenFrame.maxY - windowSize.height - 20
+        let y = screenFrame.maxY - windowSize.height + 2 // hide borders on top
+
         window.setFrameOrigin(NSPoint(x: x, y: y))
+
+        window.level = .statusBar // <<< stick to top
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
+
 }
