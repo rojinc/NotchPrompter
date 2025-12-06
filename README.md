@@ -12,7 +12,7 @@ Perfect for quick videos, or keeping important text visible while you work.
 - Minimalist design
 - Lightweight
 - Pause on hover
-- Customizable speed and size
+- Customizable speed and size 
 
 ## Screenshot
 <img width="1303" height="800" alt="SCR-20251206-nrty" src="https://github.com/user-attachments/assets/1c76dfd7-559f-4df1-9cd6-c183b7c538d6" />
@@ -25,6 +25,11 @@ Head to [Releases](https://github.com/jpomykala/NotchPrompter/releases) and down
 
 ## Contributing
 All contributions are welcome! Whether you're fixing bugs, improving the UI, or adding new features, your help is appreciated.
+
+## Donating
+
+If you enjoy using NotchPrompter and find it useful, you can support the project! Your donation will **[help me cover the cost of an Apple Developer License](https://github.com/sponsors/jpomykala)**, which is required to publish the app on the Mac App Store. Every contribution, big or small, brings me closer to making NotchPrompter available for everyone directly from the App Store.
+Thank you for your support! 💖
 
 ## Roadmap
 - [ ] Add text persistence (save/load notes).
