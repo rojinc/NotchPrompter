@@ -55,7 +55,7 @@ final class PrompterWindow {
 
         window.setFrameOrigin(NSPoint(x: x, y: y))
 
-        window.level = .statusBar // <<< stick to top
+        window.level = .statusBar // stick to top?
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

@@ -13,12 +13,26 @@ struct NotchPrompterApp: App {
 
         MenuBarExtra("NotchPrompter", systemImage: "text.justify") {
             Button {
-                appDelegate.viewModel.togglePlayPause()
+                appDelegate.viewModel.play()
+            }
+            label: {
+                Label("Play", systemImage: "play.fill")
+            }.disabled(appDelegate.viewModel.isPlaying) 
+
+            Button {
+                appDelegate.viewModel.pause()
             } label: {
-                Label(appDelegate.viewModel.isPlaying ? "Pause" : "Play",
-                      systemImage: appDelegate.viewModel.isPlaying ? "pause.fill" : "play.fill")
+                Label("Pause", systemImage: "pause.fill")
             };
 
+            
+            Button {
+                appDelegate.viewModel.reset()
+            } label: {
+                Label("Reset", systemImage: "arrow.counterclockwise")
+            };
+
+            
             Divider()
 
             SettingsLink {
