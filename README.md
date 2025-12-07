@@ -7,15 +7,16 @@
 A **very basic**, always-on-top floating text prompter for macOS.
 Perfect for quick videos, or keeping important text visible while you work.
 
-[Install NotchPrompter](https://github.com/jpomykala/NotchPrompter/releases/download/1.1/notch-prompter.zip)
+[Install NotchPrompter 1.2](https://github.com/jpomykala/NotchPrompter/releases/download/1.2/notch-prompter.zip)
 
 
 ## Features
 - Always on top
+- Voice activation
 - Minimalist design
 - Lightweight
 - Pause on hover
-- Customizable speed and size 
+- Customizable speed and size
 
 ## Screenshot
 <img width="1512" height="720" alt="SCR-20251206-qhya" src="https://github.com/user-attachments/assets/a85e4573-85a3-4296-b454-a41a7b62cae9" />
