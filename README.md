@@ -47,3 +47,7 @@ This project is open-source and available under the MIT License.
 
 ## Questions or Ideas?
 Open an issue or reach out!
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=jpomykala/NotchPrompter&type=date&legend=top-left)](https://www.star-history.com/#jpomykala/NotchPrompter&type=date&legend=top-left)
