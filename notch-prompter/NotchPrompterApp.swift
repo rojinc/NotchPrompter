@@ -58,10 +58,16 @@ struct MenuContent: View {
 
         Divider()
 
-        Button("Play") {
-               viewModel.play()
+        Button {
+            if viewModel.isPlaying {
+                viewModel.pause()
+            } else {
+                viewModel.play()
+            }
+        } label: {
+            Label(viewModel.isPlaying ? "Pause" : "Play",
+                  systemImage: viewModel.isPlaying ? "pause.fill" : "play.fill")
         }
-
         .disabled(viewModel.voiceActivation)
         .keyboardShortcut("p", modifiers: [.command, .option])
 

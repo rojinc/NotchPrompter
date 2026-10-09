@@ -126,20 +126,16 @@ class PrompterHostingView: NSView {
         guard isHovering else { return }
 
         let scrollAmount = event.scrollingDeltaY
-        let sensitivity: CGFloat = 100.0
+        let sensitivity: CGFloat = 2.0
 
         viewModel.offset = max(0, viewModel.offset - scrollAmount * sensitivity)
     }
 
     private func handleHoverChange(hovering: Bool) {
-        guard viewModel.pauseOnHover else {
-            isHovering = false
-            wasPlayingBeforeHover = false
-            return
-        }
-
         if hovering {
+            // Track hover even when pause-on-hover is off, so scroll wheel still works
             isHovering = true
+            guard viewModel.pauseOnHover else { return }
             wasPlayingBeforeHover = viewModel.isPlaying
             if viewModel.isPlaying {
                 viewModel.pause()
@@ -173,6 +169,13 @@ struct PrompterContentView: View {
                     Spacer(minLength: 0)
                 }
                 .clipped()
+                .onChange(of: viewModel.offset) { _, newValue in
+                    if contentHeight > 0, newValue >= contentHeight {
+                        // We've scrolled past the end - stop at the end
+                        viewModel.offset = contentHeight
+                        viewModel.pause()
+                    }
+                }
                 .onChange(of: viewModel.text) { _, _ in
                     viewModel.offset = 0
                 }
@@ -216,7 +219,7 @@ struct PrompterContentView: View {
             }
 
             // Hover controls overlay
-            if showControls {
+            if showControls && viewModel.showHoverControls {
                 VStack {
                     Spacer()
 

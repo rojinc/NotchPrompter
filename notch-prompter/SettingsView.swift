@@ -530,20 +530,8 @@ struct VoiceTabView: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
 
-                        HStack {
-                            let rms = viewModel.audioMonitor?.rmsLevel ?? 0
-                            let percentage = min(max(rms / 0.1, 0), 1.0) * 100
-                            let color: Color = rms > Float(viewModel.audioThreshold) ? .green : .red
-
-                            ProgressView(value: percentage / 100)
-                                .progressViewStyle(
-                                    LinearProgressViewStyle(tint: color)
-                                )
-                                .frame(height: 10)
-
-                            Text(percentage / 100, format: .percent.precision(.fractionLength(0)))
-                                .monospacedDigit()
-                                .frame(width: 50, alignment: .trailing)
+                        if let audioMonitor = viewModel.audioMonitor {
+                            AudioLevelMeter(audioMonitor: audioMonitor, threshold: viewModel.audioThreshold)
                         }
                     }
 
@@ -553,6 +541,31 @@ struct VoiceTabView: View {
                 }
             }
             .padding(16)
+        }
+    }
+}
+
+// MARK: - Audio level meter
+// Observes the monitor directly so the bar updates live while speaking
+struct AudioLevelMeter: View {
+    @ObservedObject var audioMonitor: AudioMonitor
+    let threshold: Float
+
+    var body: some View {
+        HStack {
+            let rms = audioMonitor.rmsLevel
+            let percentage = min(max(rms / 0.1, 0), 1.0) * 100
+            let color: Color = rms > threshold ? .green : .red
+
+            ProgressView(value: percentage / 100)
+                .progressViewStyle(
+                    LinearProgressViewStyle(tint: color)
+                )
+                .frame(height: 10)
+
+            Text(percentage / 100, format: .percent.precision(.fractionLength(0)))
+                .monospacedDigit()
+                .frame(width: 50, alignment: .trailing)
         }
     }
 }

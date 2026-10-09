@@ -184,7 +184,9 @@ final class PrompterWindow {
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             window.animator().setFrame(targetFrame, display: true)
         }, completionHandler: { [weak self] in
-            self?.window.orderOut(nil)
+            // If the prompter was shown again before the hide finished, keep it on screen
+            guard let self = self, !self.viewModel.isPrompterVisible else { return }
+            self.window.orderOut(nil)
         })
     }
 }

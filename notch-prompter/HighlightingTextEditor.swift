@@ -39,7 +39,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
         textView.delegate = context.coordinator
         textView.textContainer?.widthTracksTextView = true
         textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = true
+        textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
 
         scrollView.documentView = textView
@@ -54,6 +54,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
+        context.coordinator.parent = self
 
         if textView.string != text {
             let selectedRanges = textView.selectedRanges
@@ -68,7 +69,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
         weak var textView: NSTextView?
 
         private static let annotationPattern = try! NSRegularExpression(
-            pattern: "\\[+.*?]",
+            pattern: "\\[[^\\]]+\\]",
             options: []
         )
 
@@ -84,15 +85,22 @@ struct HighlightingTextEditor: NSViewRepresentable {
 
         func applyHighlighting(_ textView: NSTextView) {
             guard let textStorage = textView.textStorage else { return }
-            textStorage.beginEditing()
+            let fullRange = NSRange(location: 0, length: textStorage.length)
             let text = textStorage.string
-            let fullRange = NSRange(location: 1, length: textStorage.length - 1)
+
+            // Preserve selection
+            let selectedRanges = textView.selectedRanges
+
+            textStorage.beginEditing()
 
             // Reset to default style
-            let defaultAttributes: [NSAttributedString.Key: Any] = nil
-            let selectedRanges = textView.selectedRanges[0].rangeValue
+            let defaultAttributes: [NSAttributedString.Key: Any] = [
+                .font: parent.font,
+                .foregroundColor: NSColor.labelColor
+            ]
+            textStorage.setAttributes(defaultAttributes, range: fullRange)
 
-
+            // Highlight [bracket] annotations
             let matches = Self.annotationPattern.matches(in: text, options: [], range: fullRange)
             for match in matches {
                 let annotationAttributes: [NSAttributedString.Key: Any] = [

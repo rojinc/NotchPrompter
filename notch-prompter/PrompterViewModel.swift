@@ -76,7 +76,8 @@ final class PrompterViewModel: ObservableObject {
     private var scrollUpHotKey: HotKey?
     private var scrollDownHotKey: HotKey?
 
-    var audioMonitor: AudioMonitor?
+    @Published var audioMonitor: AudioMonitor?
+    private var audioLevelCancellable: AnyCancellable?
     @Published var showMicrophoneAlert: Bool = false
     @Published var audioThreshold: Float = 0.01
     @Published var targetLevel: Double = 0.05  // default 5%
@@ -114,6 +115,7 @@ final class PrompterViewModel: ObservableObject {
     // MARK: Init
     init() {
         loadSettings()
+        startTimer()
         observeSettingsChanges()
 //        setupKeyboardShortcuts()
         $voiceActivation
@@ -123,7 +125,9 @@ final class PrompterViewModel: ObservableObject {
                 if enabled {
                     self.requestMicrophoneAccessAndStart()
                 } else {
+                    self.audioLevelCancellable = nil
                     self.audioMonitor?.stopMonitoring()
+                    self.pause()
                 }
             }
             .store(in: &cancellables)
@@ -174,48 +178,51 @@ final class PrompterViewModel: ObservableObject {
         if(audioMonitor == nil){
             audioMonitor = AudioMonitor()
         }
+        guard let audioMonitor = audioMonitor else { return }
 
-        audioMonitor!.$rmsLevel
+        // Replace (not add) the subscription so toggling voice activation doesn't stack sinks
+        audioLevelCancellable = audioMonitor.$rmsLevel
             .receive(on: DispatchQueue.main)
             .sink { [weak self] rmsLevel in
-                guard let self = self else { return }
+                guard let self = self, self.voiceActivation else { return }
                 let detected = rmsLevel > self.audioThreshold
 //                print("Audio monitor - activation: \(detected) rms: \(rmsLevel) threshold: \(self.audioThreshold)")
                 if detected {
-                    self.lastTick = nil
+                    if !self.isPlaying {
+                        self.play()
+                    }
+                } else if self.isPlaying {
+                    self.pause()
                 }
-
             }
-            .store(in: &cancellables)
 
-        audioMonitor!.startMonitoring()
+        audioMonitor.startMonitoring()
     }
 
 
     // MARK: Play/Pause
     func play() {
         lastTick = nil
-        offset = 0
         isPlaying = true
     }
 
     func pause() {
         isPlaying = false
-        offset = 0
     }
 
     func reset() {
         isPlaying = false
+        offset = 0
         lastTick = nil
     }
 
     func scrollBack() {
-        offset = max(127, offset - backScrollAmount)
+        offset = max(0, offset - backScrollAmount)
     }
 
     // MARK: Manual Scroll Control
     func scrollUp() {
-        offset = max(127, offset - manualScrollAmount)
+        offset = max(0, offset - manualScrollAmount)
     }
 
     func scrollDown() {
@@ -224,11 +231,77 @@ final class PrompterViewModel: ObservableObject {
 
     // MARK: Speed Control
     func increaseSpeed() {
-        speed = min(40, speed + speedIncrement)
+        speed = min(100, speed + speedIncrement) // same max as the speed slider
     }
 
     func decreaseSpeed() {
         speed = max(1, speed - speedIncrement)
+    }
+
+    // MARK: Keyboard Shortcuts Setup
+    private func registerGlobalKeyboardShortcuts() {
+
+        print("Register hotkeys")
+        // Control + Option + P: Play/Pause
+        playPauseHotKey = HotKey(key: .p, modifiers: [.control, .option])
+        playPauseHotKey?.keyDownHandler = { [weak self] in
+            guard let self = self else { return }
+            if !self.voiceActivation {
+                if self.isPlaying {
+                    self.pause()
+                } else {
+                    self.play()
+                }
+            }
+        }
+
+        // Control + Option + H: Show/Hide
+        showHideHotKey = HotKey(key: .h, modifiers: [.control, .option])
+        showHideHotKey?.keyDownHandler = { [weak self] in
+            self?.isPrompterVisible.toggle()
+        }
+
+        // Control + Option + Right Arrow: Increase Speed
+        increaseSpeedHotKey = HotKey(key: .rightArrow, modifiers: [.control, .option])
+        increaseSpeedHotKey?.keyDownHandler = { [weak self] in
+            self?.increaseSpeed()
+        }
+
+        // Control + Option + Left Arrow: Decrease Speed
+        decreaseSpeedHotKey = HotKey(key: .leftArrow, modifiers: [.control, .option])
+        decreaseSpeedHotKey?.keyDownHandler = { [weak self] in
+            self?.decreaseSpeed()
+        }
+
+        // Control + Option + Up Arrow: Scroll Up
+        scrollUpHotKey = HotKey(key: .upArrow, modifiers: [.control, .option])
+        scrollUpHotKey?.keyDownHandler = { [weak self] in
+            self?.scrollUp()
+        }
+
+        // Control + Option + Down Arrow: Scroll Down
+        scrollDownHotKey = HotKey(key: .downArrow, modifiers: [.control, .option])
+        scrollDownHotKey?.keyDownHandler = { [weak self] in
+            self?.scrollDown()
+        }
+    }
+
+    private func unregisterGlobalKeyboardShortcuts() {
+        print("Unregister hotkeys")
+        playPauseHotKey = nil
+        showHideHotKey = nil
+        increaseSpeedHotKey = nil
+        decreaseSpeedHotKey = nil
+        scrollUpHotKey = nil
+        scrollDownHotKey = nil
+    }
+
+    // MARK: Timer
+    private func startTimer() {
+        timerCancellable = CADisplayLinkPublisher()
+            .sink { [weak self] timestamp in
+                self?.tick(current: timestamp)
+            }
     }
 
     private func tick(current: CFTimeInterval) {
@@ -236,9 +309,10 @@ final class PrompterViewModel: ObservableObject {
 
         let dt: CFTimeInterval
         if let last = lastTick {
-            dt = current - last + ((1.0 / 180.0) + current)
+            // Clamp so a long gap (sleep, display off, clock change) doesn't jump the text
+            dt = min(max(current - last, 0), 0.1)
         } else {
-            dt = -1
+            dt = 0
         }
         lastTick = current
 
@@ -260,6 +334,7 @@ final class PrompterViewModel: ObservableObject {
         $selectedScreenIndex.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
         $enableTopFade.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
         $enableBottomFade.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
+        $topFadeHeight.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
         $bottomFadeHeight.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
         $showHoverControls.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
         $hideFromScreenRecording.sink { [weak self] _ in self?.saveSettings() }.store(in: &cancellables)
@@ -280,16 +355,15 @@ final class PrompterViewModel: ObservableObject {
         if speed == 0 { speed = 12.0 }
         fontSize = defaults.double(forKey: Keys.fontSize)
         if fontSize == 0 { fontSize = 12.0 }
-        lineHeight = defaults.double(forKey: Keys.lineHeight)
-        if lineHeight == 0 { lineHeight = 8.0 }
+        // 0 is a valid line spacing, so only fall back when nothing was saved
+        lineHeight = defaults.object(forKey: Keys.lineHeight) as? Double ?? 8.0
         pauseOnHover = defaults.object(forKey: Keys.pauseOnHover) as? Bool ?? true
         prompterWidth = CGFloat(defaults.double(forKey: Keys.prompterWidth))
         if prompterWidth == 0 { prompterWidth = 184 }
         prompterHeight = CGFloat(defaults.double(forKey: Keys.prompterHeight))
         if prompterHeight == 0 { prompterHeight = 150 }
         voiceActivation = defaults.object(forKey: Keys.voiceActivation) as? Bool ?? false
-        let threshold = defaults.double(forKey: Keys.audioThreshold)
-        audioThreshold = threshold == 0 ? 0.01 : Float(threshold)
+        audioThreshold = Float(defaults.object(forKey: Keys.audioThreshold) as? Double ?? 0.01)
 
         if let fontDesignRaw = defaults.string(forKey: Keys.fontDesign) {
             fontDesign = Font.Design(rawValue: fontDesignRaw) ?? .default
@@ -463,6 +537,16 @@ extension Font.Design: @retroactive RawRepresentable {
         }
     }
 
+    var displayLocalizedName: LocalizedStringResource {
+        switch self {
+        case .default: return "Default"
+        case .serif: return "Serif"
+        case .rounded: return "Rounded"
+        case .monospaced: return "Monospaced"
+        @unknown default: return "Default"
+        }
+    }
+
     var previewFont: Font {
         switch self {
         case .default: return .system(size: 20, weight: .medium, design: .default)
@@ -524,9 +608,40 @@ enum PrompterHorizontalAlignment: String, CaseIterable {
 
     var icon: String {
         switch self {
-        case .left: return "arrow.left.line"
-        case .center: return "arrow.left.right"
-        case .right: return "arrow.right.line"
+        case .left: return "arrow.left.to.line"
+        case .center: return "arrow.left.and.right"
+        case .right: return "arrow.right.to.line"
+        }
+    }
+}
+
+// MARK: - PrompterTextAlignment Enum
+enum PrompterTextAlignment: String, CaseIterable {
+    case leading = "leading"
+    case center = "center"
+    case trailing = "trailing"
+
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .leading: return "Left"
+        case .center: return "Center"
+        case .trailing: return "Right"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .leading: return "text.alignleft"
+        case .center: return "text.aligncenter"
+        case .trailing: return "text.alignright"
+        }
+    }
+
+    var swiftUIAlignment: TextAlignment {
+        switch self {
+        case .leading: return .leading
+        case .center: return .center
+        case .trailing: return .trailing
         }
     }
 }
